@@ -1,0 +1,17 @@
+[theme]
+base = "dark"
+primaryColor = "#3ee6a0"
+backgroundColor = "#0c0e0d"
+secondaryBackgroundColor = "#141917"
+textColor = "#edf2ee"
+
+[browser]
+gatherUsageStats = false
+
+[client]
+toolbarMode = "minimal"
+
+[server]
+# The alarm must keep working even if the browser tab is closed, so do not
+# restart the app when files change while a workout is running.
+runOnSave = false

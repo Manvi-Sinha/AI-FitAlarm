@@ -1,0 +1,6 @@
+streamlit>=1.40
+opencv-python>=4.8
+mediapipe>=0.10.14
+numpy
+groq
+python-dotenv
