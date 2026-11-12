@@ -1,108 +1,258 @@
-# AI FitAlarm
+# ⚡ AI FitAlarm — Wake Up. Move. Conquer.
 
-**Wake Up. Move. Conquer.** An alarm that only stops when you finish your reps.
-Squats, jumping jacks or high knees, counted from your webcam with MediaPipe pose
-detection. Squats are verified by a local Qwen 2.5 3B model; an AI coach writes a
-short summary afterwards. Everything runs on your computer.
+**AI FitAlarm** is an AI-powered fitness alarm system that encourages users to get out of bed and complete physical exercises before turning off their alarm.
 
-## Folder structure
+Instead of dismissing an alarm with a simple tap, users must complete a configured number of exercises. The system uses computer vision for real-time exercise tracking and Groq-powered AI validation for squat repetitions.
 
+## ✨ Features
+
+- **Smart Fitness Alarm:** An alarm that requires users to complete physical activity.
+- **Real-Time Pose Detection:** Uses MediaPipe Pose Landmarker and OpenCV to track body landmarks through a webcam.
+- **AI-Assisted Squat Validation:** Groq AI evaluates squat movement data and proposes validation decisions before repetitions are counted.
+- **Multiple Exercises:** Supports Squats, Jumping Jacks and High Knees.
+- **Automated Repetition Counting:** Tracks exercise movements and counts valid repetitions.
+- **Customizable Targets:** Allows users to select their exercise and repetition target.
+- **Alarm Scheduling:** Schedule an alarm for a preferred time or start a workout immediately.
+- **AI Workout Coach:** Provides post-workout feedback and exercise guidance.
+- **Workout History:** Stores completed workout sessions locally.
+- **Non-Blocking Processing:** Uses background threads to manage webcam processing, AI requests and alarm operations.
+
+## 🛠️ Technology Stack
+
+| Category | Technologies |
+|---|---|
+| Programming Language | Python |
+| Frontend | Streamlit |
+| Computer Vision | OpenCV |
+| Pose Estimation | MediaPipe Pose Landmarker |
+| AI Integration | Groq API |
+| AI Model | `openai/gpt-oss-20b` |
+| Numerical Processing | NumPy |
+| Environment Configuration | python-dotenv |
+| Alarm Management | Python threading, winsound |
+| Data Storage | JSON |
+| Development Environment | VS Code |
+
+## 🧠 System Architecture
+
+AI FitAlarm follows a modular architecture in which the user interface, exercise detection, AI communication, alarm management and session handling are separated.
+
+### Workflow
+
+1. **User Interaction:** The user selects an exercise, repetition target and alarm mode through the Streamlit interface.
+2. **Session Management:** The WorkoutController manages the workout lifecycle, including starting, scheduling, stopping and completing sessions.
+3. **Pose Detection:** OpenCV captures webcam frames, while MediaPipe estimates body landmarks.
+4. **Exercise Recognition:** The exercise engine processes landmarks and applies movement-specific rules.
+5. **AI Validation:** For squats, movement measurements are passed through AgentBridge to Groq AI for a proposed validation decision.
+6. **Repetition Counting:** The exercise engine checks the AI decision along with its own movement-validation conditions before counting a squat.
+7. **Alarm Control:** The alarm continues until the required exercise target is completed.
+8. **AI Coaching and History:** The system generates workout feedback and saves completed session records locally.
+
+### Architecture Overview
+
+```text
+             Streamlit UI
+                  |
+                  v
+          WorkoutController
+                  |
+                  v
+           Exercise Engine
+                  |
+          +-------+-------+
+          |               |
+          v               v
+     OpenCV Camera    Exercise Trackers
+          |               |
+          v               v
+    MediaPipe Pose    Movement Data
+                          |
+                          v
+                     AgentBridge
+                          |
+                          v
+                       Groq API
+                          |
+                          v
+                 Squat Validation
+                          |
+                          v
+                  Rep Count Update
+                          |
+                          v
+                    Alarm Manager
+                          |
+                          v
+                  Workout Completion
+                          |
+                 +--------+--------+
+                 |                 |
+                 v                 v
+             AI Coach         Workout History
 ```
+
+## 📁 Project Structure
+
+```text
 AI-FitAlarm/
-├── app.py                       Streamlit interface (draws state, forwards clicks)
-├── session_manager.py           NEW: owns the camera thread, schedule, alarm, AI bridge
-├── exercise_engine.py           MediaPipe + the three exercise counters (ported from main.py)
-├── local_agent.py               Qwen squat validation + AI coach (your file, 2 helpers added)
-├── agent_bridge.py              Background Qwen worker (your file, unchanged)
-├── alarm_manager.py             Melody + non-blocking winsound playback + schedule helpers
-├── workout_storage.py           workout_history.json saving
-├── selftest.py                  Offline self-test (no camera / Ollama / browser needed)
-├── .streamlit/config.toml       Dark theme
-├── pose_landmarker_lite.task    <- copy YOUR existing model file here
+│
+├── .streamlit/
+│   └── config.toml
+│
+├── app.py
+├── session_manager.py
+├── exercise_engine.py
+├── local_agent.py
+├── agent_bridge.py
+├── alarm_manager.py
+├── workout_storage.py
+│
+├── pose_landmarker_lite.task
 ├── requirements.txt
-└── README.md
+├── README.md
+│
+└── selftest.py
 ```
 
-`workout_history.json` and `ai_alarm_melody.wav` are created automatically.
+### Main Components
 
-## Install (Windows, Python 3.11)
+| File | Responsibility |
+|---|---|
+| `app.py` | Streamlit user interface |
+| `session_manager.py` | Workout lifecycle and session management |
+| `exercise_engine.py` | Pose processing and exercise tracking |
+| `local_agent.py` | Groq API integration, AI validation and coaching |
+| `agent_bridge.py` | Background AI request handling |
+| `alarm_manager.py` | Alarm playback and scheduling |
+| `workout_storage.py` | Workout history and JSON storage |
+| `selftest.py` | Automated offline tests |
 
+## ⚙️ Installation and Setup
+
+### Prerequisites
+
+- Windows operating system
+- Python 3.13
+- Working webcam
+- Internet connection for Groq AI features
+- Groq API key
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/Manvi-Sinha/AI-FitAlarm.git
 ```
+
+Navigate into the project directory:
+
+```bash
 cd AI-FitAlarm
-python -m venv .venv
-.venv\Scripts\activate
+```
+
+### 2. Create a Virtual Environment
+
+```powershell
+py -3.13 -m venv .venv
+```
+
+Activate it:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+### 3. Install Dependencies
+
+```bash
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-Copy `pose_landmarker_lite.task` into this folder.
+### 4. Download the MediaPipe Model
 
-## Check Ollama and Qwen
+Ensure that `pose_landmarker_lite.task` is present in the project root directory.
 
+If it is not included in your downloaded project, obtain the compatible MediaPipe Pose Landmarker Lite model and place it there.
+
+### 5. Configure Groq API
+
+Create a `.env` file in the root directory.
+
+Add your Groq API key:
+
+```env
+GROQ_API_KEY=your_groq_api_key
+GROQ_MODEL=openai/gpt-oss-20b
 ```
-ollama --version
-ollama list                 # must show qwen2.5:3b
-ollama pull qwen2.5:3b      # only if it is missing
-ollama run qwen2.5:3b "Say hi"
-```
 
-If Ollama is not running, start the Ollama app (or run `ollama serve`).
-The green/amber "Qwen online / offline" chip in the app header shows the live status.
+Replace the placeholder with your own API key.
 
-## Run
+**Important:** Never upload your `.env` file or expose your API key publicly.
 
-```
-python selftest.py          # optional: offline logic check
+### 6. Run the Application
+
+```bash
 streamlit run app.py
 ```
 
-## Test each feature
+The application will open in your browser.
 
-1. **Squats.** Pick Squats, target 3, Start Workout. Stand with hips, knees and ankles
-   visible, squat below parallel and stand up. The status reads "AI Checking", then the
-   count goes up only if Qwen approves. Needs Ollama running.
-2. **Jumping Jacks.** Start with feet together and arms down. Jump with arms overhead
-   and feet wide (chip shows "Arms Open"), then return ("Arms Closed") = 1 rep.
-3. **High Knees.** Raise the left knee to hip height, lower it, raise the right, lower it
-   = 1 rep. One leg alone never counts.
-4. **Alarm stops automatically.** On Windows the melody plays from the moment the camera
-   opens and stops the instant the last rep is counted (header chip changes to Completed,
-   the video pill says "Alarm stopped"). Use Stop workout to silence it manually.
-5. **Scheduled alarm.** Choose "Schedule alarm", set a time 1-2 minutes ahead, Start Alarm.
-   The countdown runs; at the time the alarm rings and the camera opens. Keep the
-   `streamlit run` window open and the PC awake. Closing the browser tab is fine.
-6. **History.** After completing a workout open `workout_history.json`; one new entry:
-   `date, time, exercise, completed_reps, target_reps, completed`. Stopped or failed
-   workouts are not saved (same as the original app).
-7. **AI Fitness Coach.** Appears on the completion card. With Ollama stopped you get a
-   standard summary plus a note that the local AI was unavailable.
+## 🔍 Exercise Tracking
 
-## Troubleshooting
+AI FitAlarm currently supports three exercises:
 
-| Problem | Fix |
-|---|---|
-| "Model file not found" | Put `pose_landmarker_lite.task` next to `app.py`. |
-| "Could not open the webcam" | Close Zoom/Teams/Camera app. Try `CAMERA_INDEX = 1` in `exercise_engine.py`. |
-| Squats never count | Squats need Qwen. Check the header chip, `ollama list`, `ollama pull qwen2.5:3b`. |
-| No sound | The alarm needs Windows (`winsound`). A banner explains if playback failed. |
-| Video area stays empty but counting works | Set `USE_DATA_URI_FRAME = False` in `app.py`. |
-| Cards or buttons look unstyled | The CSS targets Streamlit >= 1.40 internals. Upgrade: `pip install -U streamlit`. Function is unaffected. |
-| "Previous session still releasing the camera" | Wait a second and press Start again. |
-| `ModuleNotFoundError` | Activate the venv and run `pip install -r requirements.txt`. |
+**1. Squats**
+- Tracks hip, knee and ankle landmarks.
+- Calculates knee angles.
+- Checks squat depth and return to standing.
+- Uses Groq AI to propose a validation decision.
+- Applies additional local validation before counting repetitions.
 
-## Design notes and limitations
+**2. Jumping Jacks**
+- Tracks arm and leg positions.
+- Identifies open and closed movement states.
+- Counts completed movement cycles.
 
-* **Camera ownership.** One `WorkoutController` (module singleton) runs one camera thread.
-  Streamlit reruns only read its snapshot, so reruns cannot open a second camera or thread.
-  The live area is an auto-refreshing fragment (about 8 updates per second); detection runs
-  at full camera speed on the background thread regardless of UI refresh.
-* **Local only.** The webcam and alarm belong to the machine running Streamlit. Do not host
-  this on a remote server. All browser tabs show the same single session.
-* **Squats depend on Qwen** (original behaviour). If Ollama is down, squat reps cannot be
-  counted. The app warns you before the workout starts; Stop workout always works.
-* **Camera failure at alarm time.** As in the original app, if the camera cannot open when a
-  scheduled alarm fires, an error is shown and the alarm does not ring.
-* **Changed from the original:** after the target is reached the camera is released after
-  1 s instead of 5 s (the Streamlit completion card replaces the OpenCV window);
-  up to ~1 s of failed camera reads is tolerated while it warms up; counters freeze at the
-  target so a rep can never be counted twice; a corrupt history file is backed up instead
-  of overwritten. All thresholds, state machines and the Qwen prompts are unchanged.
+**3. High Knees**
+- Tracks left and right knee elevation.
+- Identifies alternating knee movements.
+- Counts completed repetitions based on movement rules.
+
+## 🔐 Privacy and Data Handling
+
+- Webcam capture and pose processing are performed locally.
+- Squat movement measurements are sent to the Groq cloud API for AI validation.
+- AI coaching requests use the Groq API.
+- Workout history is stored locally in JSON format.
+- API credentials are stored in a local `.env` file.
+
+## ⚠️ Current Limitations
+
+- Exercise detection depends on camera positioning, lighting and visibility of body landmarks.
+- Groq-powered features require an internet connection and a valid API key.
+- Windows alarm playback uses the `winsound` module.
+- AI validation is used alongside local movement checks; it does not replace them.
+- The system currently supports three exercises.
+
+## 🚀 Future Enhancements
+
+- Add more exercise categories.
+- Improve exercise validation and feedback.
+- Enhance the user interface and workout analytics.
+- Add personalized workout recommendations.
+- Improve session reliability and background-thread cleanup.
+- Expand workout history and performance tracking.
+
+## 👩‍💻 Developer
+
+**Manvi Sinha**
+
+B.Tech — Computer Science and Engineering (AI & ML)
+
+Narula Institute of Technology
+
+**Project:** AI FitAlarm — Wake Up. Move. Conquer.
+
+---
+
+*Built with Python, Computer Vision and AI to make waking up more productive.*
